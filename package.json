@@ -1,6 +1,6 @@
 {
     "name": "@paywatchglobal/n8n-nodes-azure-cosmos-plus",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "n8n community node for Azure Cosmos DB with Entra app-identity auth (workload/managed identity), per-item account routing, point reads and ETag-guarded replace",
     "license": "MIT",
     "homepage": "",
