@@ -36,7 +36,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # Trusted publishing: npm exchanges this job's OIDC token (id-token: write)
+      # for a short-lived publish token, so no NPM_TOKEN secret is used.
+      # No --provenance: npm only generates provenance from public repositories,
+      # and this one is private.
       - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}        
+        run: npm publish --access public
