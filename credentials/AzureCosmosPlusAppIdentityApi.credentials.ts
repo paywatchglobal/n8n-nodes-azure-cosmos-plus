@@ -83,9 +83,9 @@ export class AzureCosmosPlusAppIdentityApi implements ICredentialType {
 			displayName: 'Certificate Validity (Months)',
 			name: 'certificateValidityMonths',
 			type: 'number',
-			typeOptions: { minValue: 1, maxValue: 24 },
+			typeOptions: { minValue: 1, maxValue: 60 },
 			default: 12,
-			description: 'Validity of certificates generated for this credential',
+			description: 'Validity of certificates generated for this credential (1-60 months)',
 			displayOptions: { show: { identityType: ['certificate'] } },
 		},
 		{

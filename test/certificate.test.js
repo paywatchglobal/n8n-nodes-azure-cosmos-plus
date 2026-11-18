@@ -24,10 +24,16 @@ test('generated certificate is a valid RSA-2048 client-auth cert matching its ke
 	assert.ok(!c.certificatePem.includes('PRIVATE KEY'));
 });
 
-test('validity is clamped to 1..24 months', () => {
+test('validity is clamped to 1..60 months', () => {
 	const long = cert.generateCertificate('x', 99);
 	const days = (new Date(long.notAfter) - new Date(long.notBefore)) / 86_400_000;
-	assert.ok(days < 735, `validity ${days} days`);
+	assert.ok(days > 1820 && days < 1830, `validity ${days} days`);
+});
+
+test('a 60-month certificate is valid for five years', () => {
+	const c = cert.generateCertificate('x', 60);
+	const days = (new Date(c.notAfter) - new Date(c.notBefore)) / 86_400_000;
+	assert.ok(days > 1820 && days < 1830, `validity ${days} days`);
 });
 
 test('nextBundle: generate, rotate to pending, promote once Entra accepts it', async () => {

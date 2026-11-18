@@ -42,7 +42,7 @@ image.
 |---|---|
 | Identity Type | `Certificate (App Registration)` (default), `Workload Identity (AKS)` or `Managed Identity`. Client secrets are intentionally not supported |
 | Tenant ID / Client ID | Application (client) ID of the app registration, or client ID of the user-assigned identity |
-| Certificate Validity (Months) | 1–24, default 12 |
+| Certificate Validity (Months) | 1–60, default 12 |
 | Rotate Certificate | Generate a new certificate on the next *Get Entra Certificate* run |
 | Federated Token File | Workload identity only; defaults to `AZURE_FEDERATED_TOKEN_FILE` |
 | Default Endpoint | Used when the node has no *Endpoint Override* |

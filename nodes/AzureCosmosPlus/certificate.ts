@@ -46,12 +46,14 @@ function colonHex(hex: string): string {
 	return hex.replace(/:/g, '').toUpperCase();
 }
 
+export const MAX_VALIDITY_MONTHS = 60;
+
 /**
  * Generate a self-signed RSA-2048 / SHA-256 client-auth certificate. Key generation uses Node's
  * native crypto; node-forge only assembles and signs the X.509 structure.
  */
 export function generateCertificate(commonName: string, validityMonths: number): StoredCertificate {
-	const months = Math.min(Math.max(Math.floor(validityMonths) || 12, 1), 24);
+	const months = Math.min(Math.max(Math.floor(validityMonths) || 12, 1), MAX_VALIDITY_MONTHS);
 	const { privateKey, publicKey } = generateKeyPairSync('rsa', {
 		modulusLength: 2048,
 		publicKeyEncoding: { type: 'spki', format: 'pem' },
