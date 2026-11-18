@@ -30,6 +30,8 @@ import {
 	resolveEndpoint,
 } from './client';
 import type { AuthenticationType } from './client';
+import { COSMOS_SCOPE, parseBundle } from './certificate';
+import { getEntraCertificate } from './getEntraCertificate';
 
 export class AzureCosmosPlus implements INodeType {
 	description: INodeTypeDescription = {
@@ -94,10 +96,10 @@ export class AzureCosmosPlus implements INodeType {
 				name: 'endpointOverride',
 				type: 'string',
 				default: '',
-				placeholder:
-					'https://cosmos-app-ph.documents.azure.com:443/ or cosmos-app-ph',
+				placeholder: 'https://cosmos-app-ph.documents.azure.com:443/ or cosmos-app-ph',
 				description:
 					"Cosmos account to use for this item instead of the credential's endpoint. Accepts a URL or a bare account name and supports expressions, so one node can target several accounts. Must be *.documents.azure.com, and on the credential's Allowed Endpoints if set.",
+				displayOptions: { hide: { operation: ['getCertificate'] } },
 			},
 			{
 				displayName: 'Operation',
@@ -150,6 +152,13 @@ export class AzureCosmosPlus implements INodeType {
 						action: 'Get a document',
 					},
 					{
+						name: 'Get Entra Certificate',
+						value: 'getCertificate',
+						description:
+							'Generate (first run) and download the public certificate to upload to the Entra app registration. Also promotes a rotated certificate once Entra accepts it.',
+						action: 'Get the app registration certificate',
+					},
+					{
 						name: 'Insert',
 						value: 'insert',
 						description: 'Insert a new document (fails if ID exists)',
@@ -179,7 +188,13 @@ export class AzureCosmosPlus implements INodeType {
 				description: 'The database to use',
 				displayOptions: {
 					hide: {
-						operation: ['createDatabase', 'createContainer', 'deleteDatabase', 'deleteContainer'],
+						operation: [
+							'createDatabase',
+							'createContainer',
+							'deleteDatabase',
+							'deleteContainer',
+							'getCertificate',
+						],
 					},
 				},
 				modes: [
@@ -216,7 +231,13 @@ export class AzureCosmosPlus implements INodeType {
 				description: 'The container to use',
 				displayOptions: {
 					hide: {
-						operation: ['createDatabase', 'createContainer', 'deleteDatabase', 'deleteContainer'],
+						operation: [
+							'createDatabase',
+							'createContainer',
+							'deleteDatabase',
+							'deleteContainer',
+							'getCertificate',
+						],
 					},
 				},
 				modes: [
@@ -819,6 +840,10 @@ export class AzureCosmosPlus implements INodeType {
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
 				const operation = this.getNodeParameter('operation', itemIndex) as string;
+				if (operation === 'getCertificate') {
+					returnData.push(await getEntraCertificate.call(this, authenticationType, itemIndex));
+					continue;
+				}
 				const endpointOverride = this.getNodeParameter('endpointOverride', itemIndex, '') as string;
 				let client: CosmosClient;
 				try {
@@ -1532,10 +1557,27 @@ export class AzureCosmosPlus implements INodeType {
 				this: ICredentialTestFunctions,
 				credential: ICredentialsDecrypted,
 			): Promise<INodeCredentialTestResult> {
+				const data = credential.data as ICredentialDataDecryptedObject;
+				let suffix = '';
+				if (data.identityType === 'certificate') {
+					const bundle = parseBundle(data.certificateBundle);
+					if (!bundle.active) {
+						return {
+							status: 'Error',
+							message:
+								'No certificate yet. Save this credential, run "Get Entra Certificate" in an Azure Cosmos DB Plus node, and upload the downloaded .cer to the app registration.',
+						};
+					}
+					const daysLeft = Math.floor(
+						(new Date(bundle.active.notAfter).getTime() - Date.now()) / 86_400_000,
+					);
+					suffix = ` Certificate ${bundle.active.thumbprintSha1} expires in ${daysLeft} days${
+						bundle.pending ? '; a rotated certificate is waiting to be uploaded' : ''
+					}.`;
+				}
 				try {
-					const data = credential.data as ICredentialDataDecryptedObject;
 					const tokenCredential = getAppTokenCredential(data);
-					await tokenCredential.getToken('https://cosmos.azure.com/.default');
+					await tokenCredential.getToken(COSMOS_SCOPE);
 					if (data.endpoint) {
 						const endpoint = resolveEndpoint(
 							undefined,
@@ -1547,10 +1589,12 @@ export class AzureCosmosPlus implements INodeType {
 					}
 					return {
 						status: 'OK',
-						message: data.endpoint ? 'Token acquired and account metadata read' : 'Token acquired',
+						message:
+							(data.endpoint ? 'Token acquired and account metadata read.' : 'Token acquired.') +
+							suffix,
 					};
 				} catch (error) {
-					return { status: 'Error', message: (error as Error).message };
+					return { status: 'Error', message: (error as Error).message + suffix };
 				}
 			},
 		},

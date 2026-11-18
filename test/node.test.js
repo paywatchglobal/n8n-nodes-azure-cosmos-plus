@@ -16,14 +16,8 @@ const PH = 'https://cosmos-app-ph.documents.azure.com:443/';
 test('normalizeEndpoint accepts URLs and bare account names', () => {
 	assert.equal(normalizeEndpoint('cosmos-app-ph'), PH);
 	assert.equal(normalizeEndpoint('https://COSMOS-APP-PH.documents.azure.com'), PH);
-	assert.equal(
-		normalizeEndpoint('https://cosmos-app-ph.documents.azure.com:443/'),
-		PH,
-	);
-	assert.throws(
-		() => normalizeEndpoint('http://cosmos-app-ph.documents.azure.com'),
-		/https/,
-	);
+	assert.equal(normalizeEndpoint('https://cosmos-app-ph.documents.azure.com:443/'), PH);
+	assert.throws(() => normalizeEndpoint('http://cosmos-app-ph.documents.azure.com'), /https/);
 	assert.throws(() => normalizeEndpoint(''), /empty/);
 });
 
@@ -31,18 +25,8 @@ test('resolveEndpoint: override must be a Cosmos account and on the allowlist', 
 	assert.equal(resolveEndpoint('cosmos-app-ph', MY, ''), PH);
 	assert.equal(resolveEndpoint('', MY, ''), MY);
 	assert.throws(() => resolveEndpoint('https://evil.example.com', MY, ''), /documents\.azure\.com/);
-	assert.throws(
-		() => resolveEndpoint('cosmos-app-id', MY, `${MY}, ${PH}`),
-		/Allowed Endpoints/,
-	);
-	assert.equal(
-		resolveEndpoint(
-			'cosmos-app-ph',
-			MY,
-			'cosmos-app-my, cosmos-app-ph',
-		),
-		PH,
-	);
+	assert.throws(() => resolveEndpoint('cosmos-app-id', MY, `${MY}, ${PH}`), /Allowed Endpoints/);
+	assert.equal(resolveEndpoint('cosmos-app-ph', MY, 'cosmos-app-my, cosmos-app-ph'), PH);
 	assert.throws(() => resolveEndpoint('', '', ''), /No endpoint/);
 	// credential default must also respect its own allowlist
 	assert.throws(() => resolveEndpoint('', MY, PH), /Allowed Endpoints/);
@@ -63,27 +47,26 @@ test('workload identity without a token file fails with a clear message', () => 
 	if (prev) process.env.AZURE_FEDERATED_TOKEN_FILE = prev;
 });
 
-test('app identity credentials are cached per identity', () => {
-	const a = getAppTokenCredential({
-		identityType: 'clientSecret',
-		tenantId: 't',
-		clientId: 'c',
-		clientSecret: 's',
-	});
-	const b = getAppTokenCredential({
-		identityType: 'clientSecret',
-		tenantId: 't',
-		clientId: 'c',
-		clientSecret: 's',
-	});
-	const c = getAppTokenCredential({
-		identityType: 'clientSecret',
-		tenantId: 't',
-		clientId: 'c2',
-		clientSecret: 's',
-	});
+test('app identity credentials are cached per identity; client secrets are not supported', () => {
+	const a = getAppTokenCredential({ identityType: 'managedIdentity', clientId: 'c' });
+	const b = getAppTokenCredential({ identityType: 'managedIdentity', clientId: 'c' });
+	const c = getAppTokenCredential({ identityType: 'managedIdentity', clientId: 'c2' });
 	assert.equal(a, b);
 	assert.notEqual(a, c);
+	assert.throws(
+		() =>
+			getAppTokenCredential({
+				identityType: 'clientSecret',
+				tenantId: 't',
+				clientId: 'c',
+				clientSecret: 's',
+			}),
+		/Unsupported identity type/,
+	);
+	assert.throws(
+		() => getAppTokenCredential({ identityType: 'certificate', tenantId: 't', clientId: 'c' }),
+		/Get Entra Certificate/,
+	);
 });
 
 test('factory reuses one client per endpoint', async () => {

@@ -3,8 +3,9 @@
 n8n community node for Azure Cosmos DB (NoSQL) using the official SDK, built for keyless,
 least-privilege access:
 
-- **Entra app identity** — AKS workload identity, managed identity or an app registration,
-  using Cosmos DB data-plane RBAC. No master keys, no personal refresh tokens.
+- **Entra app identity** — app registration with a **certificate n8n generates for you**, or AKS
+  workload / managed identity, using Cosmos DB data-plane RBAC. No client secrets, no master
+  keys, no personal refresh tokens.
 - **One credential, many accounts** — the token audience (`https://cosmos.azure.com`) is
   account-agnostic, so the node takes the account per item (*Endpoint Override*) and one node
   can work across several accounts (e.g. one per country).
@@ -29,6 +30,7 @@ image.
 | Select | SQL query with optional **Query Parameters** (`[{"name":"@orderNo","value":"order-123"}]`) |
 | Get by ID | Point read by ID + partition key. *If Not Found*: error or empty item |
 | Replace | Full-document replace with `If-Match`. ETag defaults to the document's `_etag`; *Require ETag* refuses unconditional writes. Partition key is derived from the document when left empty |
+| Get Entra Certificate | Generate (first run), rotate or promote the credential's certificate and output the public `.cer` for upload |
 | Insert / Create or Update / Delete | As upstream |
 | Create / Delete Database, Create / Delete Container | As upstream (vector and full-text index options) |
 
@@ -38,11 +40,30 @@ image.
 
 | Field | |
 |---|---|
-| Identity Type | `Workload Identity (AKS)`, `Managed Identity` or `Client Secret` |
-| Tenant ID / Client ID | Client ID of the user-assigned identity or app registration |
-| Federated Token File | Optional; defaults to `AZURE_FEDERATED_TOKEN_FILE` |
+| Identity Type | `Certificate (App Registration)` (default), `Workload Identity (AKS)` or `Managed Identity`. Client secrets are intentionally not supported |
+| Tenant ID / Client ID | Application (client) ID of the app registration, or client ID of the user-assigned identity |
+| Certificate Validity (Months) | 1–24, default 12 |
+| Rotate Certificate | Generate a new certificate on the next *Get Entra Certificate* run |
+| Federated Token File | Workload identity only; defaults to `AZURE_FEDERATED_TOKEN_FILE` |
 | Default Endpoint | Used when the node has no *Endpoint Override* |
 | Allowed Endpoints | Optional allowlist (URLs or account names). Empty = any `*.documents.azure.com` |
+
+#### Certificate setup
+
+1. Create the credential with Identity Type *Certificate*, Tenant ID and Client ID, and save.
+2. Add an *Azure Cosmos DB Plus* node with that credential, choose **Get Entra Certificate**, run it.
+3. Download the `.cer` from the node's Binary output and upload it to the app registration
+   (*Certificates & secrets → Certificates → Upload certificate*), or
+   `az ad app credential reset --id <client-id> --cert @<file>.cer --append`.
+
+n8n generates an RSA-2048 / SHA-256 self-signed client-auth certificate. The private key is stored
+only in the encrypted credential (hidden and redacted from the editor); only the public certificate
+is ever output.
+
+**Rotation (no downtime):** turn on *Rotate Certificate*, run *Get Entra Certificate*, upload the new
+`.cer`. Until it is uploaded the node keeps using the current certificate; once Entra accepts the
+new one it is used automatically. Run *Get Entra Certificate* again to make it the active one, then
+remove the old certificate from the app registration. The credential test reports days to expiry.
 
 The identity needs a Cosmos DB **SQL role assignment** on each account (data-plane RBAC is per
 account), e.g. `azurerm_cosmosdb_sql_role_assignment`, plus

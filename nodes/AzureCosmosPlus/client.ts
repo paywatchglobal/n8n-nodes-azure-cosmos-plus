@@ -3,14 +3,11 @@ import type {
 	IExecuteFunctions,
 	ILoadOptionsFunctions,
 } from 'n8n-workflow';
-import { createHash } from 'crypto';
 import { CosmosClient } from '@azure/cosmos';
 import type { TokenCredential } from '@azure/core-auth';
-import {
-	ClientSecretCredential,
-	ManagedIdentityCredential,
-	WorkloadIdentityCredential,
-} from '@azure/identity';
+import { ManagedIdentityCredential, WorkloadIdentityCredential } from '@azure/identity';
+
+import { CertificateBundleCredential, parseBundle } from './certificate';
 
 export type AuthenticationType = 'appIdentity' | 'masterKey';
 
@@ -92,25 +89,30 @@ export function resolveEndpoint(
 const tokenCredentialCache = new Map<string, TokenCredential>();
 
 export function getAppTokenCredential(creds: ICredentialDataDecryptedObject): TokenCredential {
-	const identityType = (creds.identityType as string) || 'workloadIdentity';
+	const identityType = (creds.identityType as string) || 'certificate';
 	const tenantId = ((creds.tenantId as string) || '').trim();
 	const clientId = ((creds.clientId as string) || '').trim();
-	const tokenFilePath = ((creds.tokenFilePath as string) || '').trim();
-	const clientSecret = (creds.clientSecret as string) || '';
+	const tokenFilePath = ((creds.federatedFilePath as string) || '').trim();
 	if (!clientId) throw new Error('Client ID is required');
 
+	const bundle = identityType === 'certificate' ? parseBundle(creds.certificateBundle) : {};
 	const key = [
 		identityType,
 		tenantId,
 		clientId,
 		tokenFilePath,
-		clientSecret ? hash(clientSecret) : '',
+		bundle.active?.thumbprintSha256 ?? '',
+		bundle.pending?.thumbprintSha256 ?? '',
 	].join('|');
 	const cached = tokenCredentialCache.get(key);
 	if (cached) return cached;
 
 	let credential: TokenCredential;
 	switch (identityType) {
+		case 'certificate':
+			if (!tenantId) throw new Error('Tenant ID is required for certificate authentication');
+			credential = new CertificateBundleCredential(tenantId, clientId, bundle);
+			break;
 		case 'workloadIdentity': {
 			if (!tenantId) throw new Error('Tenant ID is required for Workload Identity');
 			const file = tokenFilePath || process.env.AZURE_FEDERATED_TOKEN_FILE;
@@ -125,19 +127,11 @@ export function getAppTokenCredential(creds: ICredentialDataDecryptedObject): To
 		case 'managedIdentity':
 			credential = new ManagedIdentityCredential({ clientId });
 			break;
-		case 'clientSecret':
-			if (!tenantId || !clientSecret) throw new Error('Tenant ID and Client Secret are required');
-			credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-			break;
 		default:
-			throw new Error(`Unknown identity type "${identityType}"`);
+			throw new Error(`Unsupported identity type "${identityType}"`);
 	}
 	tokenCredentialCache.set(key, credential);
 	return credential;
-}
-
-function hash(value: string): string {
-	return createHash('sha256').update(value).digest('hex').slice(0, 16);
 }
 
 // --- Client factory ------------------------------------------------------------------
