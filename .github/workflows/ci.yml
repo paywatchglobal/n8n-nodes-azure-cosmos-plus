@@ -16,16 +16,17 @@ jobs:
   verify:
     runs-on: ubuntu-latest
 
+    # n8n requires Node >= 24; 26 is the current LTS.
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['22']
+        node-version: ['24', '26']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
