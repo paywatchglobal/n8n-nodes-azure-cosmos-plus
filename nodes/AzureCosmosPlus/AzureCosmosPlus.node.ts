@@ -125,7 +125,7 @@ export class AzureCosmosPlus implements INodeType {
 						value: 'upsert',
 						description:
 							'Create a new record, or update the current one if it already exists (upsert)',
-						action: 'Upsert a document',
+						action: 'Create or update a document',
 					},
 					{
 						name: 'Delete',

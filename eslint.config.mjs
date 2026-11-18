@@ -6,12 +6,15 @@ import { configWithoutCloudSupport } from '@n8n/node-cli/eslint';
 // - require-node-api-error: re-throwing an already-wrapped NodeApiError /
 //   NodeOperationError after an `instanceof` guard is correct; the rule is
 //   purely syntactic and can't see the guard.
+// - resource-operation-pattern: grouping the 11 operations under resources changes
+//   the saved parameters, so existing workflows would need a new node version.
 export default [
 	...configWithoutCloudSupport,
 	{
 		rules: {
 			'@n8n/community-nodes/no-runtime-dependencies': 'off',
 			'@n8n/community-nodes/require-node-api-error': 'off',
+			'@n8n/community-nodes/resource-operation-pattern': 'off',
 		},
 	},
 ];
