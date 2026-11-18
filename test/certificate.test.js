@@ -8,13 +8,13 @@ const {
 } = require('../dist/credentials/AzureCosmosPlusAppIdentityApi.credentials.js');
 const { getEntraCertificate } = require('../dist/nodes/AzureCosmosPlus/getEntraCertificate.js');
 
-test('generated certificate is a valid RSA-2048 client-auth cert matching its key', () => {
+test('generated certificate is a valid RSA-3072 client-auth cert matching its key', () => {
 	const c = cert.generateCertificate('n8n Azure Cosmos DB Plus test', 12);
 	const x = new X509Certificate(c.certificatePem);
 	assert.ok(x.checkPrivateKey(createPrivateKey(c.privateKeyPem)));
 	assert.equal(x.subject, 'CN=n8n Azure Cosmos DB Plus test');
 	assert.equal(x.issuer, x.subject);
-	assert.equal(x.publicKey.asymmetricKeyDetails.modulusLength, 2048);
+	assert.equal(x.publicKey.asymmetricKeyDetails.modulusLength, 3072);
 	assert.deepEqual(x.keyUsage, ['1.3.6.1.5.5.7.3.2']); // clientAuth
 	assert.equal(x.ca, false);
 	const days = (new Date(c.notAfter) - new Date(c.notBefore)) / 86_400_000;

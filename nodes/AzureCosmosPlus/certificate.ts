@@ -49,13 +49,14 @@ function colonHex(hex: string): string {
 export const MAX_VALIDITY_MONTHS = 60;
 
 /**
- * Generate a self-signed RSA-2048 / SHA-256 client-auth certificate. Key generation uses Node's
- * native crypto; node-forge only assembles and signs the X.509 structure.
+ * Generate a self-signed RSA-3072 / SHA-256 client-auth certificate. Entra accepts RSA keys only;
+ * 3072 bits keeps a certificate of up to MAX_VALIDITY_MONTHS within NIST SP 800-57 past 2030.
+ * Key generation uses Node's native crypto; node-forge only assembles and signs the X.509 structure.
  */
 export function generateCertificate(commonName: string, validityMonths: number): StoredCertificate {
 	const months = Math.min(Math.max(Math.floor(validityMonths) || 12, 1), MAX_VALIDITY_MONTHS);
 	const { privateKey, publicKey } = generateKeyPairSync('rsa', {
-		modulusLength: 2048,
+		modulusLength: 3072,
 		publicKeyEncoding: { type: 'spki', format: 'pem' },
 		privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
 	});

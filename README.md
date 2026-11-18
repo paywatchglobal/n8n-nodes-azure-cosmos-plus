@@ -56,8 +56,8 @@ image.
    (*Certificates & secrets → Certificates → Upload certificate*), or
    `az ad app credential reset --id <client-id> --cert @<file>.cer --append`.
 
-n8n generates an RSA-2048 / SHA-256 self-signed client-auth certificate. The private key is stored
-only in the encrypted credential (hidden and redacted from the editor); only the public certificate
+n8n generates an RSA-3072 / SHA-256 self-signed client-auth certificate (Entra accepts RSA only).
+The private key is stored only in the encrypted credential (hidden and redacted from the editor); only the public certificate
 is ever output.
 
 **Rotation (no downtime):** turn on *Rotate Certificate*, run *Get Entra Certificate*, upload the new
