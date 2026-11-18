@@ -3,7 +3,7 @@
     "version": "0.2.1",
     "description": "n8n community node for Azure Cosmos DB with Entra app-identity auth (workload/managed identity), per-item account routing, point reads and ETag-guarded replace",
     "license": "MIT",
-    "homepage": "",
+    "homepage": "https://github.com/paywatchglobal/n8n-nodes-azure-cosmos-plus#readme",
     "keywords": [
         "n8n-community-node-package"
     ],
@@ -44,14 +44,14 @@
         "node-forge": "^1.4.3"
     },
     "devDependencies": {
-        "@azure/core-auth": "^1.10.0",
-        "@n8n/node-cli": "^0.31.0",
-        "@types/node": "^22.0.0",
+        "@azure/core-auth": "^1.11.0",
+        "@n8n/node-cli": "^0.57.4",
+        "@types/node": "^24.19.2",
         "@types/node-forge": "^1.3.14",
-        "eslint": "9.39.4",
-        "prettier": "3.8.3",
-        "release-it": "^20.0.1",
-        "typescript": "5.9.3"
+        "eslint": "10.15.0",
+        "prettier": "3.10.1",
+        "release-it": "^21.1.2",
+        "typescript": "6.0.3"
     },
     "peerDependencies": {
         "n8n-workflow": "*"
