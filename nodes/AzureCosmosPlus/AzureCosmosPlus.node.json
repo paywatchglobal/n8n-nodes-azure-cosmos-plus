@@ -1,0 +1,33 @@
+{
+    "node": "@paywatchglobal/n8n-nodes-azure-cosmos-plus",
+    "nodeVersion": "1.0",
+    "codexVersion": "1.0",
+    "categories": [
+        "Development",
+        "Developer Tools"
+    ],
+    "resources": {
+        "credentialDocumentation": [
+            {
+                "url": "https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/security/how-to-grant-data-plane-role-based-access"
+            }
+        ],
+        "primaryDocumentation": [
+            {
+                "url": "https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/sdk-nodejs"
+            }
+        ]
+    },
+    "alias": [
+        "azure",
+        "cosmos",
+        "cosmosdb",
+        "nosql",
+        "microsoft"
+    ],
+    "subcategories": {
+        "Development": [
+            "Cloud Infrastructure"
+        ]
+    }
+}

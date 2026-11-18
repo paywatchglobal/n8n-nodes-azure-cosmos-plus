@@ -1,0 +1,57 @@
+{
+    "name": "@paywatchglobal/n8n-nodes-azure-cosmos-plus",
+    "version": "0.1.0",
+    "description": "n8n community node for Azure Cosmos DB with Entra app-identity auth (workload/managed identity), per-item account routing, point reads and ETag-guarded replace",
+    "license": "MIT",
+    "homepage": "",
+    "keywords": [
+        "n8n-community-node-package"
+    ],
+    "author": {
+        "name": "Asyrique Thevendran",
+        "email": "asyrique.thevendran@paywatchglobal.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/paywatchglobal/n8n-nodes-azure-cosmos-plus.git"
+    },
+    "scripts": {
+        "build": "n8n-node build",
+        "build:watch": "tsc --watch",
+        "dev": "n8n-node dev",
+        "lint": "n8n-node lint",
+        "lint:fix": "n8n-node lint --fix",
+        "test": "node --test test/*.test.js"
+    },
+    "files": [
+        "dist",
+        "LICENSE"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "strict": false,
+        "credentials": [
+            "dist/credentials/AzureCosmosPlusAppIdentityApi.credentials.js",
+            "dist/credentials/AzureCosmosPlusKeyApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/AzureCosmosPlus/AzureCosmosPlus.node.js"
+        ]
+    },
+    "dependencies": {
+        "@azure/cosmos": "^4.10.2",
+        "@azure/identity": "^4.14.1"
+    },
+    "devDependencies": {
+        "@n8n/node-cli": "^0.31.0",
+        "eslint": "9.39.4",
+        "prettier": "3.8.3",
+        "release-it": "^20.0.1",
+        "typescript": "5.9.3",
+        "@types/node": "^22.0.0",
+        "@azure/core-auth": "^1.10.0"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    }
+}
