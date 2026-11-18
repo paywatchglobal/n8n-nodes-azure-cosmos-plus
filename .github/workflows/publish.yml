@@ -38,7 +38,8 @@ jobs:
 
       # Trusted publishing: npm exchanges this job's OIDC token (id-token: write)
       # for a short-lived publish token, so no NPM_TOKEN secret is used.
-      # No --provenance: npm only generates provenance from public repositories,
-      # and this one is private.
+      # --provenance makes the attestation required: npm adds it automatically only
+      # from a public repository, and without the flag a publish from a private one
+      # would silently ship without it. With the flag that publish fails instead.
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --provenance --access public
